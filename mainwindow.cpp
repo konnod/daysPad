@@ -1,8 +1,8 @@
 #include "mainwindow.h"
 #include "ui_mainwindow.h"
 
-//TODO: config file
-//number of past days to keep in file and memory
+// TODO: config file
+// number of past days to keep in file and memory
 #define MAX_DAYS_OUT 40
 
 std::string filename = "dayspad.dmap";
@@ -14,9 +14,8 @@ std::string filename = "dayspad.dmap";
 char delimiter = '\0';
 std::map<QDate, std::string> map;
 
-//TODO: remove these ones, make one fstream
-std::ifstream file_i;
-std::ofstream file_o;
+// TODO: remove these ones, make one fstream
+std::fstream file_stream;
 QDate selected_day;
 
 MainWindow::MainWindow(QWidget *parent) :
@@ -62,7 +61,7 @@ void MainWindow::on_calendarWidget_selectionChanged()
     if(map.size() > 0)
     {
         std::map<QDate, std::string>::iterator it = map.find(selected_day);
-        //Current date has description
+        // current date has description
         if(it != map.end())
         {
             std::string text = map.at(selected_day);
@@ -83,9 +82,11 @@ void MainWindow::on_calendarWidget_selectionChanged()
  */
 bool MainWindow::writeMapToFile()
 {
-    //clear file's content
-    file_o.open(filename.c_str(), std::fstream::trunc);
-    if (file_o.bad())
+    // clear file's content
+    std::cout<<"writing"<<"\n";
+     std::cout.flush();
+    file_stream.open(filename.c_str(), std::fstream::trunc | std::fstream::out);
+    if (file_stream.bad())
     {
         std::cerr<<"Failed to open file\n";
         return false;
@@ -96,14 +97,15 @@ bool MainWindow::writeMapToFile()
         std::string text = iter->second;
         std::replace(text.begin(), text.end(), '\n', '\a');
         std::replace(text.begin(), text.end(), ' ', '\b');
-        file_o<<iter->first.toString("dd/MM/yyyy").toStdString()<<delimiter<<text;
-        file_o<<"\n";
+        file_stream<<iter->first.toString("dd/MM/yyyy").toStdString()<<delimiter<<text;
+        file_stream<<"\n";
         iter++;
+        std::cout<<text<<"\n";
     }
-    file_o.close();
-    if(file_i.bad())
+    file_stream.close();
+    if(file_stream.bad())
     {
-        //TODO: write to log
+        // TODO: write to log
         std::cerr<<"Failed to close file\n";
         return false;
     }
@@ -119,8 +121,8 @@ bool MainWindow::writeMapToFile()
  * @return true, if there was no fails while working with file and false otherwise
  */
 bool MainWindow::readMapFromFile(){
-    file_i.open(filename.c_str(), std::fstream::in);
-    if (file_i.bad())
+    file_stream.open(filename.c_str(), std::fstream::in);
+    if (file_stream.bad())
     {
         std::cerr<<"Failed to open file\n";
         return false;
@@ -128,7 +130,7 @@ bool MainWindow::readMapFromFile(){
     std::string date_string;
     std::string token;
     size_t pos = 0;
-    while(file_i>>date_string)
+    while(file_stream>>date_string)
     {
         pos = date_string.find(delimiter);
         if(pos == std::string::npos)
@@ -144,10 +146,10 @@ bool MainWindow::readMapFromFile(){
         std::replace(date_string.begin(), date_string.end(), '\b', ' ');
         map.insert(std::pair<QDate,std::string>(date,date_string));
     }
-    file_i.close();
-    if(file_i.bad())
+    file_stream.close();
+    if(file_stream.bad())
     {
-        //TODO: write to log
+        // TODO: write to log
         std::cerr<<"Failed to close file\n";
         return false;
     }
@@ -184,13 +186,13 @@ void MainWindow::cleanUpMap()
 {
     for(std::map<QDate, std::string>::iterator iter = map.begin(); iter != map.end();)
     {
-        //case if today is more than MAX_DAYS_OUT ahead
+        // if today is more than MAX_DAYS_OUT ahead
         if(iter->first.year() == QDate::currentDate().year()
                 && QDate::currentDate().dayOfYear() - iter->first.dayOfYear() >= MAX_DAYS_OUT)
         {
             map.erase(iter++);
         }
-        //if the new year started, calculations somehow changes
+        // if the new year started, calculation somehow changes
         else if(iter->first.year() < QDate::currentDate().year()
                 && QDate::currentDate().dayOfYear() + iter->first.daysInYear() - iter->first.dayOfYear() >= MAX_DAYS_OUT)
         {
