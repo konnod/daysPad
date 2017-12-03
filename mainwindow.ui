@@ -46,14 +46,14 @@
         <item>
          <widget class="QPushButton" name="pushButton">
           <property name="text">
-           <string>Сохранить</string>
+           <string>Save</string>
           </property>
          </widget>
         </item>
         <item>
          <widget class="QPushButton" name="pushButton_2">
           <property name="text">
-           <string>Сохранить всё</string>
+           <string>Save All</string>
           </property>
          </widget>
         </item>

@@ -3,9 +3,10 @@
 
 //TODO: config file
 //number of past days to keep in file and memory
-#define  MAX_DAYS_OUT 40
+#define MAX_DAYS_OUT 40
 
 std::string filename = "dayspad.dmap";
+
 /*
  * It's necessary to set the delimiter to the value
  * that'll be never entered by user
@@ -70,12 +71,13 @@ void MainWindow::on_calendarWidget_selectionChanged()
     }
 
 }
+
 /**
  * @brief Writes all the map's content to file
  *
  * Method preserves characters ' ' and '\n' from writing to file,
- * 'cause file stream's delimiter is one of that chars.
- * Thats why string that represents one day is placed in one line
+ * 'cause file stream's default delimiter is one of that chars.
+ * As result string that represents one day is placed in one line
  *
  * @return true, if there was no fails while working with file and false otherwise
  */
@@ -98,9 +100,9 @@ bool MainWindow::writeMapToFile()
         file_o<<"\n";
         iter++;
     }
-    file_o.clear();
     file_o.close();
-    if(file_i.bad()){
+    if(file_i.bad())
+    {
         //TODO: write to log
         std::cerr<<"Failed to close file\n";
         return false;
@@ -128,7 +130,6 @@ bool MainWindow::readMapFromFile(){
     size_t pos = 0;
     while(file_i>>date_string)
     {
-        std::cout<<date_string<<std::endl;
         pos = date_string.find(delimiter);
         if(pos == std::string::npos)
         {
@@ -136,9 +137,7 @@ bool MainWindow::readMapFromFile(){
             break;
         }
         token = date_string.substr(0, pos);
-        std::cout<<token<<std::endl;
         date_string.erase(0, pos + 1);
-        std::cout<<date_string<<std::endl;
         QString str = QString::fromStdString(token);
         QDate date = QDate::fromString(str, "dd/MM/yyyy");
         std::replace(date_string.begin(), date_string.end(), '\a', '\n');
@@ -146,7 +145,8 @@ bool MainWindow::readMapFromFile(){
         map.insert(std::pair<QDate,std::string>(date,date_string));
     }
     file_i.close();
-    if(file_i.bad()){
+    if(file_i.bad())
+    {
         //TODO: write to log
         std::cerr<<"Failed to close file\n";
         return false;
@@ -178,7 +178,7 @@ void MainWindow::saveToMap(){
 /**
  * @brief Cleanup records, that are out of date
  *
- * The number of days out are defined by MAX_DAYS_OUT constant
+ * The number of days out are defined by max_days_out constant
  */
 void MainWindow::cleanUpMap()
 {
@@ -208,5 +208,9 @@ void MainWindow::on_pushButton_2_clicked()
 
 void MainWindow::closeEvent(QCloseEvent *)
 {
+    // possible that there were no calendar selection changing
+    // so save the last entered data
+    saveToMap();
+
     writeMapToFile();
 }
